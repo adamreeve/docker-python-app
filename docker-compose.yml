@@ -1,0 +1,39 @@
+app:
+    build: ./docker/app
+    restart: always
+    expose:
+        - "8080"
+    links:
+        - database:database
+    volumes:
+        - hello-app:/usr/src/app
+    env_file: dev.env
+    command: ./run.sh
+
+nginx:
+    build: ./docker/nginx
+    restart: always
+    ports:
+        - "8080:8080"
+    volumes:
+        - hello-app/static:/www/static
+    links:
+        - app:app
+
+database:
+    build: ./docker/database/postgres
+    restart: always
+    env_file: dev.env
+    expose:
+        - "5432"
+
+dbclient:
+    build: ./docker/database/dbclient
+    env_file: dev.env
+    environment:
+        - PGHOST=database
+        - PGPORT=5432
+    volumes:
+        - ./database:/setup
+    links:
+        - database:database
